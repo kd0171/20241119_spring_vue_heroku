@@ -17,13 +17,25 @@ public class AdminUserController {
     private final UserService userService;
 
     // ユーザー一覧の取得
+    @CrossOrigin(origins = "http://localhost:8081")
     @GetMapping
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     public List<UserEntity> getAllUsers() {
         return userService.getAllUsers();
     }
 
+    // IDでユーザーを取得
+    @CrossOrigin(origins = "http://localhost:8081")
+    @GetMapping("/{id}")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    public ResponseEntity<UserEntity> getUserById(@PathVariable Long id) {
+        return userService.getUserById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+    
     // ユーザーの作成
+    @CrossOrigin(origins = "http://localhost:8081")
     @PostMapping
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     public ResponseEntity<UserEntity> createUser(@RequestBody UserEntity user) {
@@ -32,6 +44,7 @@ public class AdminUserController {
     }
 
     // ユーザーの編集
+    @CrossOrigin(origins = "http://localhost:8081")
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     public ResponseEntity<UserEntity> updateUser(@PathVariable Long id, @RequestBody UserEntity user) {
@@ -40,6 +53,7 @@ public class AdminUserController {
     }
 
     // ユーザーの削除
+    @CrossOrigin(origins = "http://localhost:8081")
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
