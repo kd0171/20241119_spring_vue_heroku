@@ -12,7 +12,8 @@
             <th>Email</th>
             <th>Role</th>
             <th>Extra Info</th>
-            <th>Actions</th> <!-- 新しい列を追加 -->
+            <th>Actions</th> <!-- 編集列 -->
+            <th>Delete</th> <!-- 削除列 -->
           </tr>
         </thead>
         <tbody>
@@ -24,6 +25,10 @@
             <td>
               <!-- 編集ボタン -->
               <button @click="editUser(user.id)">Edit</button>
+            </td>
+            <td>
+              <!-- 削除ボタン: IDが1のユーザーには表示しない -->
+              <button v-if="user.id !== 1" @click="deleteUser(user.id)">Delete</button>
             </td>
           </tr>
         </tbody>
@@ -63,6 +68,23 @@ export default {
     editUser(userId) {
       this.$router.push(`/dashboard/user-edit/${userId}`);
     },
+    // ユーザー削除処理
+    async deleteUser(userId) {
+      if (confirm("Are you sure you want to delete this user?")) {
+        try {
+          await axios.delete(`http://localhost:8080/admin/users/${userId}`, {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem('accessToken')}`, // トークンをヘッダーに追加
+            },
+          });
+          alert("User deleted successfully.");
+          this.fetchUsers(); // ユーザー一覧を再取得
+        } catch (error) {
+          console.error("Error deleting user:", error);
+          alert("Failed to delete user.");
+        }
+      }
+    },
   },
 };
 </script>
@@ -99,5 +121,13 @@ button {
 
 button:hover {
   background-color: #0056b3;
+}
+
+button[type="button"] {
+  background-color: #f44336;
+}
+
+button[type="button"]:hover {
+  background-color: #d32f2f;
 }
 </style>

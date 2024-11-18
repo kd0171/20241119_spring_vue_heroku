@@ -7,9 +7,14 @@
         <input type="email" id="email" v-model="user.email" required />
       </div>
       <div>
-        <label for="extraInfo">Extra Info:</label>
-        <input type="text" id="extraInfo" v-model="user.extraInfoRaw" />
+        <label for="extraInfoRaw">Extra Info:</label>
+        <input type="text" id="extraInfoRaw" v-model="user.extraInfoRaw" />
       </div>
+      <!-- 新しいパスワードを横に表示 -->
+      <div class="form-group" v-if="user.password">
+        <label for="newPassword">New Password: </label>
+        <span id="newPassword" class="new-password-display">{{ user.password }}</span>
+      </div>   
       <div>
         <label for="role">Role:</label>
         <select id="role" v-model="user.role" required>
@@ -29,17 +34,18 @@ import axios from "axios";
 
 export default {
   name: "DashBoardUserEdit",
-  data() {
-    return {
-      user: {
-        email: "",
-        extraInfoRaw: "", // ユーザーが記入する情報
-        extraInfo: "", // サーバーに送信する情報
-        role: "",
-        password: "", // 新しいパスワードを格納
-      },
-    };
-  },
+    data() {
+      return {
+        user: {
+          email: "",
+          extraInfoRaw: "", // ユーザーが記入する情報
+          extraInfo: "", // サーバーに送信する情報
+          role: "",
+          password: "", // 新しいパスワードを格納
+        },
+        originalPasswordInfo: "", // 元のパスワード情報を一時保存
+      };
+    },
   mounted() {
     this.userId = parseInt(this.$route.params.id, 10); // URLからユーザーIDを取得
     this.fetchUser();
@@ -51,14 +57,22 @@ export default {
         const userId = this.$route.params.id; // URLパラメータからユーザーIDを取得
         const response = await axios.get(`http://localhost:8080/admin/users/${userId}`, {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("accessToken")}`, // トークンをヘッダーに追加
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
           },
         });
         const userData = response.data;
         this.user.email = userData.email;
-        this.user.extraInfoRaw = userData.extraInfo; // ユーザーが編集できる情報のみ
+        this.user.extraInfoRaw = userData.extraInfo.replace(/\[Init Pass: \w{10}\]\s*/, '').replace(/\[Reset Pass: \w{10}\]\s*/, '');
         this.user.role = userData.role;
-        this.user.password = ""; // パスワードフィールドは空で初期化
+
+        // ExtraInfo からパスワード情報を抽出し保存
+        const initPassMatch = userData.extraInfo.match(/\[Init Pass: (\w{10})\]/);
+        const resetPassMatch = userData.extraInfo.match(/\[Reset Pass: (\w{10})\]/);
+
+        this.originalPasswordInfo = resetPassMatch ? resetPassMatch[0] : initPassMatch ? initPassMatch[0] : "";
+
+        // パスワード表示用
+        this.user.password = resetPassMatch ? resetPassMatch[1] : initPassMatch ? initPassMatch[1] : "";
       } catch (error) {
         console.error("Error fetching user:", error);
         alert("Failed to fetch user.");
@@ -76,31 +90,43 @@ export default {
     // パスワードリセット
     resetPassword() {
       const newPassword = this.generatePassword();
+      this.originalPasswordInfo = '';
       this.user.password = newPassword;
-      this.user.extraInfoRaw += ` [Reset Pass: ${newPassword}]`; // extraInfoRawに追加
     },
     // ユーザー情報の更新
     async updateUser() {
       try {
-        // 更新するユーザー情報を構築
-        const updatedUser = {
-          email: this.user.email,
-          extraInfo: this.user.extraInfoRaw, // パスワードリセット情報が含まれたものを送信
-          role: this.user.role,
-          password: this.user.password ? this.user.password : null, // パスワードが設定されていれば送信
-        };
-
+        // axios.put で送信するデータを直接構築
         const userId = this.$route.params.id;
-        await axios.put(`http://localhost:8080/admin/users/${userId}`, updatedUser, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+        const edittedExtraInfo = `${this.originalPasswordInfo ? this.originalPasswordInfo : `[Reset Pass: ${this.user.password}]`} ${this.user.extraInfoRaw ? this.user.extraInfoRaw : ''}`.trim();
+        const response = await axios.put(
+          `http://localhost:8080/admin/users/${userId}`,
+          {
+            email: this.user.email,
+            extraInfo: edittedExtraInfo, // 修正済みの extraInfo を送信
+            role: this.user.role,
+            password: this.user.password,
           },
-        });
-        // 成功したらダッシュボードへリダイレクト
-        this.$router.push("/dashboard");
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+            },
+          }
+        );
+
+        console.log("Update Response:", response.data); // デバッグ用
+        this.$router.push("/dashboard"); // 成功時にダッシュボードへリダイレクト
       } catch (error) {
-        console.error("Error updating user:", error);
-        alert("Failed to update user.");
+        console.error("Error updating user:", error.response?.data || error.message);
+
+        if (error.response?.status === 403) {
+          alert("You do not have permission to update this user.");
+        } else if (error.response?.status === 401) {
+          alert("Session expired. Please log in again.");
+          this.$router.push("/login");
+        } else {
+          alert("Failed to update user. Please check the console for more details.");
+        }
       }
     },
   },
