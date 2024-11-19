@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 @RequiredArgsConstructor
 public class HelloController {
     @CrossOrigin(origins = "http://localhost:3000")
-    @GetMapping("/")
+    @GetMapping("/greeting")
     public String greeting() {
         return "Hello test";
     }
