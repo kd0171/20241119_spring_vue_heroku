@@ -26,7 +26,7 @@ import java.util.List;
 public class AuthController {
     
     private final AuthService authService; 
-    @CrossOrigin(origins = "http://localhost:8081")
+    @CrossOrigin(origins = "http://localhost:3000")
     @PostMapping("/auth/login")
     public LoginResponse login(@RequestBody @Validated LoginRequest request){
         return authService.attemptLogin(request.getEmail(), request.getPassword());
