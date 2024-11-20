@@ -38,7 +38,7 @@
 </template>
 
 <script>
-import axios from "axios";
+import api from "@/api/axios"; // ここでインポートします
 
 export default {
   name: "DashBoard",
@@ -53,7 +53,7 @@ export default {
   methods: {
     async fetchUsers() {
       try {
-        const response = await axios.get("http://localhost:8080/admin/users", {
+        const response = await api.get("/admin/users", {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('accessToken')}`, // トークンをヘッダーに追加
           },
@@ -72,7 +72,7 @@ export default {
     async deleteUser(userId) {
       if (confirm("Are you sure you want to delete this user?")) {
         try {
-          await axios.delete(`http://localhost:8080/admin/users/${userId}`, {
+          await api.delete(`/admin/users/${userId}`, {
             headers: {
               Authorization: `Bearer ${localStorage.getItem('accessToken')}`, // トークンをヘッダーに追加
             },

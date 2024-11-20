@@ -23,7 +23,7 @@
 </template>
 
 <script>
-import axios from "axios";
+import api from "@/api/axios"; // ここでインポートします
 
 export default {
   name: "DashBoardUserCreate",
@@ -59,7 +59,7 @@ export default {
       
       try {
         // 新しいユーザーを追加するAPIリクエスト
-        await axios.post("http://localhost:8080/admin/users", {
+        await api.post("/admin/users", {
           email: this.user.email,
           extraInfo: this.user.extraInfo,
           role: this.user.role,
