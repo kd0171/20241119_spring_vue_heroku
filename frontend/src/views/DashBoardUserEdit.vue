@@ -30,7 +30,7 @@
 </template>
 
 <script>
-import axios from "axios";
+import api from "@/api/axios"; // ここでインポートします
 
 export default {
   name: "DashBoardUserEdit",
@@ -55,7 +55,7 @@ export default {
     async fetchUser() {
       try {
         const userId = this.$route.params.id; // URLパラメータからユーザーIDを取得
-        const response = await axios.get(`http://localhost:8080/admin/users/${userId}`, {
+        const response = await api.get(`/admin/users/${userId}`, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
           },
@@ -99,8 +99,8 @@ export default {
         // axios.put で送信するデータを直接構築
         const userId = this.$route.params.id;
         const edittedExtraInfo = `${this.originalPasswordInfo ? this.originalPasswordInfo : `[Reset Pass: ${this.user.password}]`} ${this.user.extraInfoRaw ? this.user.extraInfoRaw : ''}`.trim();
-        const response = await axios.put(
-          `http://localhost:8080/admin/users/${userId}`,
+        const response = await api.put(
+          `/admin/users/${userId}`,
           {
             email: this.user.email,
             extraInfo: edittedExtraInfo, // 修正済みの extraInfo を送信

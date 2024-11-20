@@ -24,8 +24,7 @@
 </template>
 
 <script>
-
-import axios from 'axios';
+import api from "@/api/axios"; // ここでインポートします
 
 // JWTデコード関数
 function decodeJWT(token) {
@@ -57,7 +56,7 @@ export default {
     // ログインを試み、トークンを取得
     async handleLogin() {
       try {
-        const response = await axios.post('http://localhost:8080/auth/login', {
+        const response = await api.post('/auth/login', {
           email: this.email,
           password: this.password
         });
@@ -99,7 +98,7 @@ export default {
       }
 
       try {
-        const response = await axios.get('http://localhost:8080/admin', {
+        const response = await api.get('/admin', {
           headers: {
             'Authorization': `Bearer ${this.token}`
           }
@@ -117,7 +116,7 @@ export default {
     async accessSecuredEndpoint() {
       if (!this.token) return;
       try {
-        const response = await axios.get('http://localhost:8080/secured', {
+        const response = await api.get('/secured', {
           headers: {
             'Authorization': `Bearer ${this.token}`
           }
